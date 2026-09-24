@@ -58,7 +58,7 @@ def build(mode: str, output: Path) -> None:
 
     favicon_path = LOCAL / "assets" / "favicon.png"
     favicon_data = base64.b64encode(favicon_path.read_bytes()).decode("ascii")
-    html = html.replace('href="assets/favicon.png?v=2"', f'href="data:image/png;base64,{favicon_data}"')
+    html = html.replace('href="assets/favicon.png?v=3"', f'href="data:image/png;base64,{favicon_data}"')
 
     html = html.replace('<link rel="stylesheet" href="styles.css?v=13">', f"<style>\n{css}\n</style>")
     html = html.replace('<script src="app.js?v=12" defer></script>', f'<script>window.DASHBOARD_MODE="{mode}";window.EMBEDDED_DASHBOARD_DATA={safe_data};</script>\n<script>\n{app}\n</script>')
