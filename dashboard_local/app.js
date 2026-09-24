@@ -65,8 +65,14 @@ function selectedMonths() {
 function periodShortLabel() { const dates = periodDates(); if (state.periodMode === "day") return dates?.[0] ? dateLabel(dates[0]) : "Sem dia"; if (state.periodMode === "week") return dates?.length ? `${dateLabel(dates[0])} a ${dateLabel(dates.at(-1))}` : "Sem semana"; if (state.periodMode === "range") return state.periodStart && state.periodEnd ? `${dateLabel(state.periodStart)} a ${dateLabel(state.periodEnd)}` : "Intervalo inválido"; return analysisPeriodLabel(); }
 function analysisPeriodLabel() { if (state.periodMode !== "month") return periodShortLabel(); const months = selectedMonths(); return !months.length ? "Sem período" : months.length === 1 ? monthLabel(months[0]) : `${monthLabel(months[0])} a ${monthLabel(months.at(-1))}`; }
 const METRIC_FIELDS = ["records", "eligibleRecords", "validLines", "onTimeLines", "delayedLines", "unclassifiedRecords", "missingLinesRecords", "calcGrossEligibleRecords", "calcGrossEligibleLines", "calcGrossOnTimeLines", "calcGrossDelayedLines", "calcCompletedRecords", "calcCompletedEligibleLines", "calcCompletedOnTimeLines", "calcCompletedDelayedLines", "calcOpenWithinRecords", "calcOpenWithinLines", "calcOpenOverdueRecords", "calcOpenOverdueLines", "calcFallbackRecords", "calcFallbackLines", "calcNotCalculatedRecords", "calcNotCalculatedLines", "comparisonEligibleLines", "comparisonBothOnTimeLines", "comparisonBothDelayLines", "comparisonSourceOnTimeCalcDelayLines", "comparisonSourceDelayCalcOnTimeLines", "netEligibleLines", "netOnTimeLines", "netDelayedLines", "capacityExcludedLines", "netUnavailableLines", "openMetricsAvailableRecords", "newSourceRecords"];
+function comparableMetricRows(rows, operation) {
+  if (operation !== "Inbound") return rows;
+  const netRows = rows.filter(row => (row.netEligibleLines || 0) > 0);
+  return netRows.length ? netRows : rows;
+}
 function aggregateMetricRows(rows, operation, months) {
   if (!rows.length) return null;
+  rows = comparableMetricRows(rows, operation);
   const result = { operation, month: months.at(-1), months: [...months] };
   METRIC_FIELDS.forEach(field => result[field] = rows.reduce((sum, row) => sum + (row[field] || 0), 0));
   return result;
@@ -353,8 +359,9 @@ function outboundKpis() {
 function inboundKpis() {
   const item = periodMetric("Inbound"), gross = calculatedGross(item), completed = completedGross(item), net = netSla(item), delta = gross != null && net != null ? net - gross : null;
   const rule = clientInfo()?.inboundRule, ruleText = rule ? `${rule.stageFrom} → ${rule.stageTo}` : "Sem regra ativa", capacity = selectedCapacity("Inbound"), capacityValue = capacity.active ? capacity.officialCapacity : capacity.suggestedCapacity, slaTarget = target("Inbound");
+  const grossNote = net != null ? "Gross comparável à mesma base com capacidade ativa" : "Pré-avisos concluídos ou vencidos no período";
   return `<section class="kpi-grid outbound-kpis">
-    ${kpi(IS_ADMIN ? "Gross recalculado" : "Performance Gross", pct(gross), IS_ADMIN ? `Realizado · ${ruleText}` : "Pré-avisos concluídos ou vencidos no período", status(gross, "Inbound").key)}
+    ${kpi(IS_ADMIN ? "Gross recalculado" : "Performance Gross", pct(gross), IS_ADMIN ? `Realizado · ${ruleText}` : grossNote, status(gross, "Inbound").key)}
     ${kpi("Meta SLA", pct(slaTarget.target), `Atenção a partir de ${pct(slaTarget.warning)}`)}
     ${kpi(IS_ADMIN ? "Gross de concluídos" : "Performance Gross dos concluídos", pct(completed), item ? `${fmt.format(item.calcCompletedEligibleLines)} linhas finalizadas` : "Sem dados", status(completed, "Inbound").key)}
     ${kpi(IS_ADMIN ? "SLA NET" : "Performance NET", pct(net), net == null ? "Aguardando capacidade oficial ativa" : `${fmt.format(item.netEligibleLines)} linhas dentro da capacidade`, net == null ? "neutral" : status(net, "Inbound").key)}
