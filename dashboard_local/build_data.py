@@ -815,6 +815,21 @@ def split_capacity(lines: int, remaining: int) -> tuple[int, int, int]:
     return included, excluded, remaining - included
 
 
+def allocate_inbound_net_capacity(records: list[dict[str, Any]], official: int | None) -> list[tuple[int, int]]:
+    """Retira do NET apenas o atraso que excede a capacidade diária."""
+    if official is None:
+        return [(0, 0) for _ in records]
+    total_lines = sum(max(0, int(record.get("lines") or 0)) for record in records)
+    excess = max(0, total_lines - official)
+    allocations: list[tuple[int, int]] = []
+    for record in records:
+        lines = max(0, int(record.get("lines") or 0))
+        excluded = min(lines, excess) if record.get("performance") == "Delay" else 0
+        excess -= excluded
+        allocations.append((lines - excluded, excluded))
+    return allocations
+
+
 def classify_gross(config: OperationalConfiguration, calendar: BusinessCalendar, client: str, stamps: dict[str, datetime | None], reference_day: date, as_of: datetime = SOURCE_AS_OF, owner: str = "DEFAULT") -> dict[str, Any]:
     rows, rule_error = config.effective_gross_rule(client, stamps, reference_day, owner)
     if not rows:
@@ -1487,7 +1502,8 @@ def main() -> None:
         remaining = official
         total_lines = sum(item["lines"] for item in records)
         included_total = excluded_total = 0
-        for record in records:
+        allocations = allocate_inbound_net_capacity(records, official) if operation == "Inbound" else None
+        for index, record in enumerate(records):
             bucket = aggregates[record["metricKey"]]
             daily_bucket = daily_aggregates[record["dailyMetricKey"]]
             if remaining is None:
@@ -1497,7 +1513,10 @@ def main() -> None:
                 if record["detail"] and record["performance"] == "Delay":
                     record["detail"]["netStatus"] = "NET não calculado: capacidade oficial ausente"
                 continue
-            included, excluded, remaining = split_capacity(record["lines"], remaining)
+            if allocations is not None:
+                included, excluded = allocations[index]
+            else:
+                included, excluded, remaining = split_capacity(record["lines"], remaining)
             included_total += included
             excluded_total += excluded
             if record["performance"] in {"On Time", "Delay"}:

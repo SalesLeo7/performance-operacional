@@ -32,7 +32,7 @@ Edite `outputs/01a08633-89b4-7283-8814-f0b65f6970f7/ParametrosOperacionais_Inbou
 - Na aba `FontesInbound`, mantenha o arquivo consolidado, o alias e o corte de cada cliente. A mesma planilha pode atender vários clientes.
 - Na aba `RegrasInbound`, defina o início, o fim, o prazo e a vigência por cliente e Owner. A configuração inicial usa `Creation` → `Finish` e 24 horas úteis. Também são aceitos prazo por dia útil mais horário e o `Due Date` da fonte.
 - Na aba `CapacidadeInbound`, preencha `CapacidadeOficial` e altere `Ativo` para `Sim` para habilitar o NET do Recebimento. A capacidade sugerida é o p95 das linhas recebidas por dia no evento inicial configurado em `RegrasInbound`.
-- A capacidade do Inbound é independente da capacidade do Outbound e pode variar por Owner. Linhas acima do limite diário permanecem no Gross e saem do NET.
+- A capacidade do Inbound é independente da capacidade do Outbound e pode variar por Owner. Quando o volume do dia supera o limite, somente as linhas atrasadas que excedem a capacidade saem do NET; as linhas no prazo continuam elegíveis.
 - Se a etapa final do Inbound estiver vazia, a etapa anterior preenchida é usada. Sem evento inicial ou sem os dados exigidos pelo tipo de prazo escolhido, o registro fica como não calculado e não entra no SLA.
 - Na aba `OwnerAliases`, normalize o Owner recebido. ASUS usa `ECOMM` e `RETAIL`; ALGAR usa `TELECOM` e `VOGEL`; clientes de divisão única usam `PRINCIPAL`.
 - `OwnerKey` em Capacidade, Jornada, MetasEtapas e RegrasGross segue a prioridade: cliente + Owner, cliente + `DEFAULT`, `DEFAULT` + `DEFAULT`.

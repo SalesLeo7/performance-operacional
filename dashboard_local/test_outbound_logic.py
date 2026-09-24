@@ -2,7 +2,7 @@ from datetime import date, datetime, time
 from copy import deepcopy
 import unittest
 
-from build_data import BusinessCalendar, OperationalConfiguration, classify_gross, classify_inbound, csv_timestamp, is_cancelled, split_capacity
+from build_data import BusinessCalendar, OperationalConfiguration, allocate_inbound_net_capacity, classify_gross, classify_inbound, csv_timestamp, is_cancelled, split_capacity
 
 
 class OutboundRulesTest(unittest.TestCase):
@@ -17,6 +17,17 @@ class OutboundRulesTest(unittest.TestCase):
 
     def test_capacity_can_split_one_order(self):
         self.assertEqual(split_capacity(500, 400), (400, 100, 0))
+
+    def test_inbound_net_excludes_only_delayed_lines_above_daily_capacity(self):
+        records = [
+            {"lines": 40, "performance": "On Time"},
+            {"lines": 40, "performance": "Delay"},
+        ]
+        self.assertEqual(allocate_inbound_net_capacity(records, 39), [(40, 0), (0, 40)])
+
+    def test_inbound_net_keeps_delays_when_day_is_within_capacity(self):
+        records = [{"lines": 20, "performance": "Delay"}]
+        self.assertEqual(allocate_inbound_net_capacity(records, 39), [(20, 0)])
 
     def test_cancelled_requires_a_valid_date(self):
         self.assertTrue(is_cancelled(datetime(2026, 7, 8, 15, 0)))
