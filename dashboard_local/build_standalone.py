@@ -58,7 +58,9 @@ def build(mode: str, output: Path) -> None:
 
     favicon_path = LOCAL / "assets" / "favicon.png"
     (ROOT / "favicon.png").write_bytes(favicon_path.read_bytes())
-    html = html.replace('href="assets/favicon.png?v=4"', 'href="favicon.png?v=5"')
+    # The standalone HTML is opened from the project root, so its favicon must
+    # resolve relative to that file (the web app still uses assets/favicon.png).
+    html = html.replace('href="assets/favicon.png?v=5"', 'href="favicon.png?v=5"')
 
     html = html.replace('<link rel="stylesheet" href="styles.css?v=13">', f"<style>\n{css}\n</style>")
     html = html.replace('<script src="app.js?v=12" defer></script>', f'<script>window.DASHBOARD_MODE="{mode}";window.EMBEDDED_DASHBOARD_DATA={safe_data};</script>\n<script>\n{app}\n</script>')
