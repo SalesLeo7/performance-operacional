@@ -1,0 +1,145 @@
+// ============================================================
+// Parameters
+// ============================================================
+
+// pBaseFile
+"C:\performance_geral_cjm\00 - HTML's update\00 - Bases OVERVIEW HTMLs.xlsx"
+
+// pConfigFile
+"C:\performance_geral_cjm\00 - HTML's update\MetasSLA.xlsx"
+
+
+// ============================================================
+// FactOrder
+// ============================================================
+let
+    Source = Excel.Workbook(File.Contents(pBaseFile), null, true),
+    Raw = Source{[Item="OverviewOrder",Kind="Sheet"]}[Data],
+    Headers = Table.PromoteHeaders(Raw, [PromoteAllScalars=true]),
+    Selected = Table.SelectColumns(
+        Headers,
+        {"Chaveamento", "ORDER_ID", "CREATION_DATE", "NUM_LINES", "Client ID", "Performance", "ORDER_TYPE2"},
+        MissingField.UseNull
+    ),
+    Renamed = Table.RenameColumns(Selected, {
+        {"Chaveamento", "OrderKey"},
+        {"ORDER_ID", "OrderID"},
+        {"CREATION_DATE", "CreationDateRaw"},
+        {"NUM_LINES", "LineCount"},
+        {"Client ID", "ClientAlias"},
+        {"ORDER_TYPE2", "OrderType"}
+    }),
+    Parsed = Table.TransformColumns(Renamed, {
+        {"CreationDateRaw", each try Date.From(_) otherwise try Date.FromText(Text.From(_), "pt-BR") otherwise null, type date},
+        {"LineCount", each try Int64.From(_) otherwise null, Int64.Type},
+        {"ClientAlias", each if _ = null then null else Text.Upper(Text.Trim(Text.From(_))), type text},
+        {"Performance", each if _ = null or Text.Trim(Text.From(_)) = "" then "Unclassified" else Text.Trim(Text.From(_)), type text},
+        {"OrderType", each if _ = null then "Unclassified" else Text.Trim(Text.From(_)), type text}
+    }),
+    RenamedDate = Table.RenameColumns(Parsed, {{"CreationDateRaw", "CreationDate"}}),
+    JoinedAliases = Table.NestedJoin(RenamedDate, {"ClientAlias"}, ClientAliases, {"ClientAlias"}, "ClientMap", JoinKind.LeftOuter),
+    ExpandedAliases = Table.ExpandTableColumn(JoinedAliases, "ClientMap", {"ClientKey", "ClientName"}, {"ClientKey", "ClientName"}),
+    Eligible = Table.AddColumn(ExpandedAliases, "IsSLAEligible", each [LineCount] <> null and [LineCount] > 0 and List.Contains({"On Time", "Delay"}, [Performance]), type logical),
+    ValidKey = Table.SelectRows(Eligible, each [OrderKey] <> null)
+in
+    ValidKey
+
+
+// ============================================================
+// FactAdvice
+// ============================================================
+let
+    Source = Excel.Workbook(File.Contents(pBaseFile), null, true),
+    Raw = Source{[Item="OverviewAdvice",Kind="Sheet"]}[Data],
+    Headers = Table.PromoteHeaders(Raw, [PromoteAllScalars=true]),
+    Selected = Table.SelectColumns(
+        Headers,
+        {"Chaveamento", "Pre-Advice ID", "Creation", "Lines", "Client", "Performance", "Status"},
+        MissingField.UseNull
+    ),
+    Renamed = Table.RenameColumns(Selected, {
+        {"Chaveamento", "AdviceKey"},
+        {"Pre-Advice ID", "AdviceID"},
+        {"Creation", "CreationDateRaw"},
+        {"Lines", "LineCount"},
+        {"Client", "ClientAlias"}
+    }),
+    Parsed = Table.TransformColumns(Renamed, {
+        {"CreationDateRaw", each try Date.From(_) otherwise try Date.FromText(Text.From(_), "pt-BR") otherwise null, type date},
+        {"LineCount", each try Int64.From(_) otherwise null, Int64.Type},
+        {"ClientAlias", each if _ = null then null else Text.Upper(Text.Trim(Text.From(_))), type text},
+        {"Performance", each if _ = null or Text.Trim(Text.From(_)) = "" then "Unclassified" else Text.Trim(Text.From(_)), type text},
+        {"Status", each if _ = null then "Unclassified" else Text.Trim(Text.From(_)), type text}
+    }),
+    RenamedDate = Table.RenameColumns(Parsed, {{"CreationDateRaw", "CreationDate"}}),
+    JoinedAliases = Table.NestedJoin(RenamedDate, {"ClientAlias"}, ClientAliases, {"ClientAlias"}, "ClientMap", JoinKind.LeftOuter),
+    ExpandedAliases = Table.ExpandTableColumn(JoinedAliases, "ClientMap", {"ClientKey", "ClientName"}, {"ClientKey", "ClientName"}),
+    ExcludedBMW = Table.SelectRows(ExpandedAliases, each [ClientKey] <> "BMW"),
+    Eligible = Table.AddColumn(ExcludedBMW, "IsSLAEligible", each [LineCount] <> null and [LineCount] > 0 and List.Contains({"On Time", "Delay"}, [Performance]), type logical),
+    ValidKey = Table.SelectRows(Eligible, each [AdviceKey] <> null)
+in
+    ValidKey
+
+
+// ============================================================
+// ClientAliases
+// ============================================================
+let
+    Source = Excel.Workbook(File.Contents(pConfigFile), null, true),
+    Raw = Source{[Item="ClientAliases",Kind="Table"]}[Data],
+    Types = Table.TransformColumnTypes(Raw, {{"ClientAlias", type text}, {"ClientKey", type text}, {"ClientName", type text}, {"Operation", type text}}),
+    Clean = Table.TransformColumns(Types, {{"ClientAlias", each Text.Upper(Text.Trim(_)), type text}})
+in
+    Clean
+
+
+// ============================================================
+// MetasSLA
+// ============================================================
+let
+    Source = Excel.Workbook(File.Contents(pConfigFile), null, true),
+    Raw = Source{[Item="MetasSLA",Kind="Table"]}[Data],
+    Types = Table.TransformColumnTypes(Raw, {
+        {"ClientKey", type text}, {"Operation", type text}, {"ValidFrom", type date},
+        {"ValidTo", type date}, {"TargetPct", Percentage.Type}, {"WarningPct", Percentage.Type}
+    })
+in
+    Types
+
+
+// ============================================================
+// DimClient
+// ============================================================
+let
+    Source = ClientAliases,
+    Selected = Table.SelectColumns(Source, {"ClientKey", "ClientName"}),
+    Distinct = Table.Distinct(Selected),
+    Sorted = Table.Sort(Distinct, {{"ClientName", Order.Ascending}})
+in
+    Sorted
+
+
+// ============================================================
+// DimDate
+// ============================================================
+let
+    MinOrder = List.Min(List.RemoveNulls(FactOrder[CreationDate])),
+    MinAdvice = List.Min(List.RemoveNulls(FactAdvice[CreationDate])),
+    MaxOrder = List.Max(List.RemoveNulls(FactOrder[CreationDate])),
+    MaxAdvice = List.Max(List.RemoveNulls(FactAdvice[CreationDate])),
+    MinDate = Date.StartOfYear(List.Min({MinOrder, MinAdvice})),
+    MaxDate = Date.EndOfYear(List.Max({MaxOrder, MaxAdvice})),
+    Dates = List.Dates(MinDate, Duration.Days(MaxDate - MinDate) + 1, #duration(1,0,0,0)),
+    TableFromList = Table.FromList(Dates, Splitter.SplitByNothing(), {"Date"}),
+    Types = Table.TransformColumnTypes(TableFromList, {{"Date", type date}}),
+    Year = Table.AddColumn(Types, "Year", each Date.Year([Date]), Int64.Type),
+    MonthNo = Table.AddColumn(Year, "MonthNo", each Date.Month([Date]), Int64.Type),
+    Month = Table.AddColumn(MonthNo, "Month", each Text.Proper(Date.ToText([Date], "MMM", "pt-BR")), type text),
+    YearMonth = Table.AddColumn(Month, "YearMonth", each Date.ToText([Date], "yyyy-MM"), type text),
+    YearMonthLabel = Table.AddColumn(YearMonth, "YearMonthLabel", each Date.ToText([Date], "MMM/yy", "pt-BR"), type text),
+    MonthIndex = Table.AddColumn(YearMonthLabel, "MonthIndex", each [Year] * 12 + [MonthNo], Int64.Type),
+    CurrentClosedMonth = Date.EndOfMonth(Date.AddMonths(Date.From(DateTime.LocalNow()), -1)),
+    ClosedMonthOffset = Table.AddColumn(MonthIndex, "ClosedMonthOffset", each (Date.Year(CurrentClosedMonth)-[Year])*12 + Date.Month(CurrentClosedMonth)-[MonthNo], Int64.Type),
+    IsLast3Closed = Table.AddColumn(ClosedMonthOffset, "IsLast3ClosedMonths", each [ClosedMonthOffset] >= 0 and [ClosedMonthOffset] <= 2, type logical)
+in
+    IsLast3Closed

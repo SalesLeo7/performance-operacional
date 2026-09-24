@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="../assets/favicon.png?v=2">
+  <title>PROTÓTIPO — Performance por processo</title>
+  <!-- Três variantes descartáveis da seção Performance por processo, alternáveis por ?variant=A|B|C. -->
+  <style>
+    :root{
+      --navy:#002664;--blue:#07579f;--blue-2:#0b6fb8;--sky:#8cc8e8;--red:#d71920;
+      --amber:#d97706;--green:#24843b;--ink:#172033;--muted:#667085;--line:#d9e1ea;
+      --soft:#f3f6fa;--surface:#fff;--danger-soft:#fff1f2;--warn-soft:#fff8e8;--good-soft:#edf8f0;
+      --shadow:0 1px 2px rgba(16,24,40,.04),0 8px 24px rgba(0,38,100,.05)
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:var(--soft);color:var(--ink);font-family:"Segoe UI",Arial,sans-serif}
+    button,select,input{font:inherit}
+    button{cursor:pointer}
+    :focus-visible{outline:3px solid rgba(7,87,159,.38);outline-offset:2px}
+    .prototype-flag{position:fixed;z-index:90;right:20px;top:86px;padding:7px 11px;border:1px solid #f1c56d;border-radius:999px;background:#fff8df;color:#6d4700;font-size:10px;font-weight:800;letter-spacing:.08em;box-shadow:var(--shadow)}
+    .topbar{height:76px;position:sticky;top:0;z-index:50;display:flex;align-items:center;gap:34px;padding:0 28px;background:#fff;border-bottom:1px solid var(--line)}
+    .brand{display:flex;align-items:center;gap:11px;color:var(--navy)}
+    .brand-mark{width:34px;height:8px;background:var(--red);transform:skew(-20deg)}
+    .brand b{display:block;font-size:14px;letter-spacing:.08em}.brand small{display:block;margin-top:2px;color:var(--muted);font-size:10px;font-weight:400}
+    .tabs{align-self:stretch;display:flex;gap:4px}.tabs span{display:flex;align-items:center;padding:0 15px;color:#475467;font-size:12px;font-weight:650}.tabs .active{color:var(--navy);border-bottom:3px solid var(--red)}
+    .updated{margin-left:auto;display:flex;align-items:center;gap:8px;font-size:11px}.updated i{width:9px;height:9px;border-radius:50%;background:var(--green);box-shadow:0 0 0 4px #e5f4e9}.updated small{display:block;margin-top:2px;color:var(--muted)}
+    .shell{display:grid;grid-template-columns:240px minmax(0,1fr);min-height:calc(100vh - 76px)}
+    .sidebar{position:sticky;top:76px;height:calc(100vh - 76px);padding:26px 18px;background:#fff;border-right:1px solid var(--line)}
+    .sidebar-title,.section-kicker{display:block;color:#52627a;font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}
+    .field{display:block;margin-top:20px}.field>span{display:block;margin-bottom:7px;font-size:11px;font-weight:700}.field select,.field input{width:100%;height:42px;padding:0 11px;border:1px solid #c8d3e0;border-radius:7px;background:#fff;color:var(--ink)}
+    .range{display:grid;grid-template-columns:1fr 1fr;gap:8px}.range .field{min-width:0}.range input{font-size:11px}
+    .context{margin-top:18px;padding:13px;border:1px solid #e1e7ef;border-radius:9px;background:#f8fafc}.context small{display:block;color:var(--muted);font-size:9px;letter-spacing:.08em}.context b{display:block;margin-top:5px;font-size:12px}.context span{display:block;margin-top:7px;color:var(--muted);font-size:10px;line-height:1.45}
+    .content{min-width:0;padding:27px 30px 110px}
+    .page-head{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;margin-bottom:24px}.eyebrow{color:var(--blue);font-size:10px;font-weight:800;letter-spacing:.13em;text-transform:uppercase}.page-head h1{margin:5px 0 4px;font-size:27px;line-height:1.1}.page-head p{margin:0;color:var(--muted);font-size:12px}.period-pill{padding:8px 11px;border:1px solid var(--line);border-radius:999px;background:#fff;color:#475467;font-size:10px;font-weight:700}
+    .section-head{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:25px 0 10px;padding-bottom:9px;border-bottom:1px solid var(--line)}.section-head h2{margin:0;color:var(--navy);font-size:12px;letter-spacing:.09em;text-transform:uppercase}.section-head p{margin:0;color:var(--muted);font-size:10px}
+    .panel,.kpi,.process-card{background:var(--surface);border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+    .kpis{display:grid;grid-template-columns:repeat(7,minmax(110px,1fr));gap:12px}.kpi{min-width:0;min-height:118px;padding:15px;border-top:4px solid #c9d3df}.kpi.good{border-top-color:var(--green)}.kpi.warn{border-top-color:var(--amber)}.kpi.danger{border-top-color:var(--red)}.kpi small{display:block;color:#344054;font-size:10px;line-height:1.3}.kpi strong{display:block;margin:12px 0 9px;font-size:21px;letter-spacing:-.03em}.kpi span{display:block;color:var(--muted);font-size:9px;line-height:1.4}
+    .overview{display:grid;grid-template-columns:1.05fr .95fr;gap:14px;margin-top:14px}.panel{padding:18px}.panel-head{display:flex;justify-content:space-between;align-items:start;gap:14px}.panel-head h3{margin:0;font-size:14px}.panel-head span{color:var(--muted);font-size:9px}.fake-bars{display:grid;gap:12px;margin-top:18px}.fake-row{display:grid;grid-template-columns:72px minmax(0,1fr) 45px;gap:10px;align-items:center;font-size:10px}.bar{height:9px;position:relative;overflow:hidden;border-radius:999px;background:#edf1f5}.bar i{display:block;height:100%;border-radius:inherit;background:var(--blue)}.bar .net{background:var(--green)}.demand{height:105px;display:flex;align-items:end;gap:5px;margin-top:18px;padding-bottom:18px;border-bottom:1px solid #d8e0ea;position:relative}.demand:after{content:"meta diária";position:absolute;left:0;right:0;top:32px;border-top:2px solid var(--red);color:var(--red);font-size:8px;text-align:right;padding-top:3px}.demand i{flex:1;background:#7fb7d7;border-radius:4px 4px 0 0}
+    .situation{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.situation article{padding:15px;background:#fff;border:1px solid var(--line);border-radius:10px}.situation small{display:block;color:var(--muted);font-size:9px}.situation b{display:block;margin:10px 0 5px;font-size:19px}.situation span{color:var(--muted);font-size:9px}
+    .goal-marker{position:relative;height:9px;margin-top:15px;border-radius:999px;background:#edf1f5}.goal-marker>i{display:block;height:100%;border-radius:inherit;background:var(--red)}.goal-marker:after{content:"";position:absolute;left:95%;top:-4px;height:17px;border-left:2px solid var(--navy)}
+    .status-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 8px;border-radius:999px;font-size:9px;font-weight:800}.status-pill:before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor}.status-pill.warn{background:var(--warn-soft);color:#9a5a00}.status-pill.danger{background:var(--danger-soft);color:#b4232a}.status-pill.good{background:var(--good-soft);color:#1d6b30}
+    .subline{color:var(--muted);font-size:9px;line-height:1.5}.stage-chip{display:inline-flex;align-items:center;gap:7px;padding:6px 9px;border:1px solid #dce5ef;border-radius:7px;background:#f8fafc;color:#344054;font-size:9px;font-weight:700}.stage-chip b{color:var(--blue)}
+    .selected{border-color:var(--blue)!important;box-shadow:0 0 0 3px rgba(7,87,159,.12),var(--shadow)!important}
+    .click-note{display:flex;align-items:center;gap:7px;color:var(--muted);font-size:9px}.click-note i{width:14px;height:14px;display:grid;place-items:center;border-radius:50%;background:#eaf1f8;color:var(--blue);font-style:normal;font-weight:800}
+    .detail-strip{margin-top:12px;padding:12px 14px;border:1px solid #d7e3ef;border-radius:9px;background:#f7fbff;color:#344054;font-size:10px}.detail-strip b{color:var(--navy)}
+    /* A — duas lentes paralelas */
+    .a-processes{display:grid;grid-template-columns:1fr 1fr;gap:14px}.a-card{padding:19px;text-align:left}.a-top{display:flex;justify-content:space-between;gap:14px}.a-title{display:flex;align-items:center;gap:10px}.a-icon{width:36px;height:36px;display:grid;place-items:center;border-radius:9px;background:#eaf3fa;color:var(--blue);font-weight:900}.a-card h3{margin:0 0 4px;font-size:15px}.a-score{display:flex;align-items:end;gap:12px;margin-top:21px}.a-score strong{font-size:36px;line-height:.9;letter-spacing:-.05em}.a-score span{padding-bottom:3px;color:var(--muted);font-size:10px}.a-stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:17px}.a-stat{padding:9px;border-radius:8px;background:#f7f9fc}.a-stat small{display:block;color:var(--muted);font-size:8px}.a-stat b{display:block;margin-top:4px;font-size:12px}.a-foot{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-top:14px}
+    /* B — fluxo contínuo */
+    .b-flow{padding:20px}.b-story{display:grid;grid-template-columns:1fr 52px 1fr 52px 1fr;align-items:stretch}.b-node{min-height:200px;padding:17px;border:1px solid var(--line);border-radius:11px;background:#fff}.b-node.endpoint{display:flex;flex-direction:column;justify-content:center;background:#f8fafc}.b-node.endpoint strong{font-size:18px}.b-node.process{border-top:4px solid var(--red);text-align:left}.b-node.process h3{margin:11px 0 4px;font-size:14px}.b-node.process .metric{display:flex;align-items:end;justify-content:space-between;margin-top:22px}.b-node.process .metric strong{font-size:30px}.b-node.process .metric small{color:var(--muted);font-size:9px}.b-arrow{position:relative;display:grid;place-items:center;color:#7890a9;font-size:20px}.b-arrow:before{content:"";position:absolute;left:4px;right:4px;border-top:2px solid #b7c5d4}.b-arrow span{position:relative;padding:4px;background:#fff}.b-legend{display:flex;justify-content:space-between;gap:12px;margin-top:15px;padding-top:14px;border-top:1px solid var(--line)}
+    /* C — foco nas exceções */
+    .c-layout{display:grid;grid-template-columns:310px minmax(0,1fr);gap:14px}.c-summary{padding:21px;background:var(--navy);color:#fff;border-radius:13px;box-shadow:var(--shadow)}.c-summary .eyebrow{color:#9dd4ef}.c-summary h3{margin:8px 0 4px;font-size:20px}.c-summary p{margin:0;color:#c6d4e4;font-size:10px;line-height:1.5}.c-summary .score-pair{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin-top:20px}.c-summary .score{padding:13px;border-radius:9px;background:rgba(255,255,255,.09)}.c-summary .score small{display:block;color:#bcd0e5;font-size:8px}.c-summary .score b{display:block;margin:6px 0;font-size:25px}.c-summary .score span{font-size:8px}.c-summary .insight{margin-top:18px;padding:12px;border-left:3px solid #ef9a9e;background:rgba(255,255,255,.08);font-size:10px;line-height:1.5}.c-table{padding:0;overflow:hidden}.c-table .panel-head{padding:18px 18px 0}.exception-row{display:grid;grid-template-columns:1.25fr .8fr .8fr .8fr 34px;gap:10px;align-items:center;padding:14px 18px;border-top:1px solid #edf0f4;font-size:10px}.exception-row:first-of-type{margin-top:15px}.exception-row.header{padding-block:9px;background:#f7f9fc;color:var(--muted);font-size:8px;font-weight:800;text-transform:uppercase}.exception-row button{width:30px;height:30px;border:1px solid #cfd9e5;border-radius:7px;background:#fff;color:var(--blue)}.exception-name b{display:block}.exception-name span{display:block;margin-top:4px;color:var(--muted);font-size:8px}
+    .journey{padding:18px}.journey-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-top:16px}.journey-step{position:relative;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff}.journey-step:not(:last-child):after{content:"›";position:absolute;right:-9px;top:23px;z-index:2;width:18px;height:18px;display:grid;place-items:center;border-radius:50%;background:#eaf1f8;color:var(--blue);font-weight:900}.journey-step small{display:block;color:var(--muted);font-size:8px}.journey-step b{display:block;margin:6px 0 3px;font-size:11px}.journey-step span{color:var(--blue);font-size:9px;font-weight:700}
+    .switcher{position:fixed;z-index:100;left:50%;bottom:18px;transform:translateX(-50%);display:flex;align-items:center;gap:11px;padding:8px 10px;border-radius:999px;background:#101828;color:#fff;box-shadow:0 16px 36px rgba(0,0,0,.28)}.switcher button{width:36px;height:36px;border:0;border-radius:50%;background:#344054;color:#fff;font-size:19px}.switcher b{min-width:275px;text-align:center;font-size:11px}.switcher small{display:block;margin-top:2px;color:#98a2b3;font-weight:400}
+    @media(max-width:1200px){.kpis{grid-template-columns:repeat(4,1fr)}.journey-grid{grid-template-columns:repeat(3,1fr)}}
+    @media(max-width:900px){.shell{grid-template-columns:1fr}.sidebar{display:none}.content{padding:22px 16px 100px}.tabs span{padding-inline:8px}.updated{display:none}.overview,.a-processes,.c-layout{grid-template-columns:1fr}.b-story{grid-template-columns:1fr}.b-arrow{height:44px;transform:rotate(90deg)}.situation{grid-template-columns:1fr 1fr}}
+    @media(max-width:560px){.topbar{padding:0 14px}.tabs span:not(.active){display:none}.prototype-flag{top:82px;right:10px}.kpis{grid-template-columns:1fr 1fr}.a-stats{grid-template-columns:1fr}.journey-grid{grid-template-columns:1fr}.situation{grid-template-columns:1fr}.exception-row{grid-template-columns:1.4fr .8fr 34px}.exception-row>*:nth-child(3),.exception-row>*:nth-child(4){display:none}.switcher b{min-width:195px}.period-pill{display:none}}
+  </style>
+</head>
+<body>
+  <div class="prototype-flag">PROTÓTIPO · DADOS ILUSTRATIVOS</div>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"></span><div><b>PERFORMANCE</b><small>Operações CJM</small></div></div>
+    <nav class="tabs"><span>Resumo</span><span>Recebimento</span><span class="active">Expedição</span><span>Detalhes</span></nav>
+    <div class="updated"><i></i><div><b>Dados atualizados</b><small>Protótipo para validação visual</small></div></div>
+  </header>
+  <div class="shell">
+    <aside class="sidebar">
+      <span class="sidebar-title">Contexto</span>
+      <label class="field"><span>Cliente</span><select><option>GWM · GWM</option></select></label>
+      <label class="field"><span>Owner</span><select><option>Principal</option></select></label>
+      <label class="field"><span>Granularidade</span><select><option>Mês</option><option>Semana</option><option>Dia</option></select></label>
+      <div class="range"><label class="field"><span>De</span><input value="01/07/2026" readonly></label><label class="field"><span>Até</span><input value="31/07/2026" readonly></label></div>
+      <div class="context"><small>PERÍODO EXIBIDO</small><b>01/07/2026 a 31/07/2026</b><span>Todos os indicadores respondem ao mesmo período.</span></div>
+    </aside>
+    <main class="content">
+      <div class="page-head"><div><span class="eyebrow">GWM · Principal</span><h1>Expedição</h1><p>Performance Gross e NET, capacidade diária e jornada completa do pedido.</p></div><span class="period-pill">jul./26</span></div>
+
+      <div class="section-head"><h2>Performance e capacidade</h2><p>01/07/2026 a 31/07/2026</p></div>
+      <section class="kpis">
+        <article class="kpi danger"><small>Performance Gross</small><strong>89,7%</strong><span>31.248 linhas avaliadas</span></article>
+        <article class="kpi"><small>Meta SLA</small><strong>95,0%</strong><span>Atenção a partir de 90%</span></article>
+        <article class="kpi warn"><small>Gross dos concluídos</small><strong>91,2%</strong><span>29.884 linhas finalizadas</span></article>
+        <article class="kpi good"><small>Performance NET</small><strong>95,8%</strong><span>27.460 linhas na capacidade</span></article>
+        <article class="kpi good"><small>Diferença NET × Gross</small><strong>+6,1 p.p.</strong><span>Efeito da capacidade</span></article>
+        <article class="kpi danger"><small>Atrasados em aberto</small><strong>286</strong><span>112 processos vencidos</span></article>
+        <article class="kpi good"><small>Capacidade oficial</small><strong>468</strong><span>linhas por dia</span></article>
+      </section>
+      <section class="overview">
+        <article class="panel"><div class="panel-head"><h3>Performance Gross × Performance NET</h3><span>Comparação mensal</span></div><div class="fake-bars"><div class="fake-row"><b>Gross</b><div class="bar"><i style="width:89.7%"></i></div><strong>89,7%</strong></div><div class="fake-row"><b>NET</b><div class="bar"><i class="net" style="width:95.8%"></i></div><strong>95,8%</strong></div></div></article>
+        <article class="panel"><div class="panel-head"><h3>Demanda mensal e capacidade</h3><span>Drill: mês</span></div><div class="demand"><i style="height:55%"></i><i style="height:72%"></i><i style="height:92%"></i><i style="height:64%"></i><i style="height:81%"></i></div></article>
+      </section>
+
+      <div class="section-head"><h2>Situação dos pedidos</h2><p>Resultado operacional do período</p></div>
+      <section class="situation">
+        <article><small>Concluídos no prazo</small><b>28.014</b><span>linhas finalizadas dentro do SLA</span></article>
+        <article><small>Concluídos em atraso</small><b>2.704</b><span>linhas finalizadas após o SLA</span></article>
+        <article><small>Em andamento no prazo</small><b>244</b><span>fora do denominador realizado</span></article>
+        <article><small>Atrasados em aberto</small><b>286</b><span>entram como atraso no Gross</span></article>
+      </section>
+
+      <div id="processPrototype"></div>
+
+      <div class="section-head"><h2>Jornada do pedido</h2><p id="journeyContext">Distribuições do período selecionado</p></div>
+      <section class="panel journey">
+        <div class="panel-head"><h3>Tempo entre etapas</h3><span>Horas úteis · mediana</span></div>
+        <div class="journey-grid">
+          <article class="journey-step"><small>Entrada</small><b>Creation → Allocated</b><span>3,1 h</span></article>
+          <article class="journey-step" data-stage="processing"><small>Processamento</small><b>Allocated → In Progress</b><span>1,4 h</span></article>
+          <article class="journey-step" data-stage="picking"><small>Separação</small><b>In Progress → Picked</b><span>3,2 h</span></article>
+          <article class="journey-step"><small>Embalagem</small><b>Picked → Packed</b><span>1,1 h</span></article>
+          <article class="journey-step"><small>Saída</small><b>Packed → Shipped</b><span>5,7 h</span></article>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <div class="switcher" aria-label="Alternar variante do protótipo">
+    <button id="prev" aria-label="Variante anterior">←</button>
+    <b id="variantLabel"></b>
+    <button id="next" aria-label="Próxima variante">→</button>
+  </div>
+
+  <script>
+    const names={A:'Ponte entre resultado e jornada',B:'Fluxo contínuo do processo',C:'Painel orientado a exceções'};
+    const qs=new URLSearchParams(location.search);
+    let variant=(qs.get('variant')||'A').toUpperCase();
+    if(!names[variant]) variant='A';
+    let selected='';
+
+    const sectionHead=`<div class="section-head"><h2>Performance por processo</h2><p>Onde o fluxo perde o SLA</p></div>`;
+    const chip=(from,to)=>`<span class="stage-chip"><span>${from}</span><b>→</b><span>${to}</span></span>`;
+    const cardA=(type,title,value,statusClass,statusText,from,to,sla,eligible,onTime,late)=>`
+      <button class="process-card a-card ${selected===type?'selected':''}" data-select="${type}" aria-pressed="${selected===type}">
+        <div class="a-top"><div class="a-title"><span class="a-icon">${type==='processing'?'P':'S'}</span><div><h3>${title}</h3><span class="subline">Eficiência dentro do SLA configurado</span></div></div><span class="status-pill ${statusClass}">${statusText}</span></div>
+        <div class="a-score"><strong>${value}</strong><span>meta 95,0%</span></div>
+        <div class="goal-marker"><i style="width:${parseFloat(value)}%"></i></div>
+        <div class="a-stats"><div class="a-stat"><small>SLA do processo</small><b>${sla} úteis</b></div><div class="a-stat"><small>No prazo</small><b>${onTime}</b></div><div class="a-stat"><small>Em atraso</small><b>${late}</b></div></div>
+        <div class="a-foot">${chip(from,to)}<span class="subline">${eligible} linhas elegíveis</span></div>
+      </button>`;
+
+    function detail(){
+      if(!selected) return `<div class="detail-strip"><span class="click-note"><i>i</i>Selecione um processo para destacar sua etapa na jornada.</span></div>`;
+      const processing=selected==='processing';
+      return `<div class="detail-strip"><b>${processing?'Processamento':'Separação'} selecionada:</b> a Jornada do pedido destaca ${processing?'Allocated → In Progress':'In Progress → Picked'} e os detalhes seriam filtrados para as linhas elegíveis deste processo. <button data-clear style="float:right;border:0;background:transparent;color:#07579f;font-weight:800">Limpar</button></div>`;
+    }
+
+    function A(){return sectionHead+`<section class="a-processes">${cardA('processing','Performance de processamento','93,8%','warn','Atenção','Allocated','In Progress','2 h','30.842','28.930','1.912')}${cardA('picking','Performance de separação','88,6%','danger','Crítico','In Progress','Picked','4 h','30.516','27.037','3.479')}</section>${detail()}`}
+
+    function B(){return sectionHead+`<section class="panel b-flow"><div class="b-story"><article class="b-node endpoint"><span class="section-kicker">Marco de entrada</span><strong>Allocated</strong><p class="subline">Pedido disponível para iniciar o fluxo operacional.</p></article><div class="b-arrow"><span>›</span></div><button class="b-node process ${selected==='processing'?'selected':''}" data-select="processing"><span class="status-pill warn">Atenção</span><h3>Processamento</h3>${chip('Allocated','In Progress')}<div class="metric"><strong>93,8%</strong><small>meta 95%</small></div><div class="goal-marker"><i style="width:93.8%"></i></div><p class="subline">SLA 2 h úteis · 1.912 linhas em atraso</p></button><div class="b-arrow"><span>›</span></div><button class="b-node process ${selected==='picking'?'selected':''}" data-select="picking"><span class="status-pill danger">Crítico</span><h3>Separação</h3>${chip('In Progress','Picked')}<div class="metric"><strong>88,6%</strong><small>meta 95%</small></div><div class="goal-marker"><i style="width:88.6%"></i></div><p class="subline">SLA 4 h úteis · 3.479 linhas em atraso</p></button></div><div class="b-legend"><span class="click-note"><i>i</i>A leitura acompanha a ordem real das etapas.</span><span class="subline">30.516 linhas comuns aos dois processos</span></div></section>${detail()}`}
+
+    function C(){return sectionHead+`<section class="c-layout"><article class="c-summary"><span class="eyebrow">Leitura do período</span><h3>Separação concentra o maior desvio</h3><p>O processo está 6,4 p.p. abaixo da meta e responde por 64,5% das linhas atrasadas entre os dois indicadores.</p><div class="score-pair"><div class="score"><small>PROCESSAMENTO</small><b>93,8%</b><span>Atenção · −1,2 p.p.</span></div><div class="score"><small>SEPARAÇÃO</small><b>88,6%</b><span>Crítico · −6,4 p.p.</span></div></div><div class="insight">Prioridade sugerida: analisar os dias e pedidos com maior tempo entre <b>In Progress</b> e <b>Picked</b>.</div></article><article class="panel c-table"><div class="panel-head"><div><h3>Fila de investigação</h3><span>Ordenada pelo maior desvio da meta</span></div><span class="status-pill danger">5.391 linhas atrasadas</span></div><div class="exception-row header"><span>Processo</span><span>Performance</span><span>SLA</span><span>Atraso</span><span></span></div><div class="exception-row"><div class="exception-name"><b>Separação</b><span>In Progress → Picked</span></div><strong>88,6%</strong><span>4 h úteis</span><span>3.479 linhas</span><button data-select="picking" aria-label="Analisar separação">›</button></div><div class="exception-row"><div class="exception-name"><b>Processamento</b><span>Allocated → In Progress</span></div><strong>93,8%</strong><span>2 h úteis</span><span>1.912 linhas</span><button data-select="processing" aria-label="Analisar processamento">›</button></div><div class="detail-strip" style="margin:12px 18px 18px">${selected?`<b>${selected==='processing'?'Processamento':'Separação'} em foco.</b> A jornada abaixo acompanha esta seleção.`:'Escolha uma linha para conduzir a análise da jornada.'}</div></article></section>`}
+
+    function render(){
+      document.getElementById('processPrototype').innerHTML=variant==='A'?A():variant==='B'?B():C();
+      document.getElementById('variantLabel').innerHTML=`${variant} · ${names[variant]}<small>Use ← → para comparar</small>`;
+      document.querySelectorAll('[data-select]').forEach(el=>el.onclick=()=>{selected=selected===el.dataset.select?'':el.dataset.select;render()});
+      document.querySelectorAll('[data-clear]').forEach(el=>el.onclick=()=>{selected='';render()});
+      document.querySelectorAll('.journey-step').forEach(el=>el.classList.toggle('selected',el.dataset.stage===selected));
+      document.getElementById('journeyContext').textContent=selected?`Jornada filtrada por ${selected==='processing'?'Processamento':'Separação'}`:'Distribuições do período selecionado';
+    }
+    function cycle(step){const keys=Object.keys(names);variant=keys[(keys.indexOf(variant)+step+keys.length)%keys.length];const url=new URL(location.href);url.searchParams.set('variant',variant);history.replaceState({},'',url);selected='';render()}
+    document.getElementById('prev').onclick=()=>cycle(-1);
+    document.getElementById('next').onclick=()=>cycle(1);
+    addEventListener('keydown',event=>{if(['INPUT','TEXTAREA','SELECT'].includes(document.activeElement.tagName)||document.activeElement.isContentEditable)return;if(event.key==='ArrowLeft')cycle(-1);if(event.key==='ArrowRight')cycle(1)});
+    render();
+  </script>
+</body>
+</html>
+
+

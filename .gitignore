@@ -1,0 +1,16 @@
+# Arquivos temporários e artefatos de inspeção
+tmp/
+*.inspect.ndjson
+*.check.js
+
+# Cache local de ferramentas
+.codegraph/cache/
+.codex/
+.impeccable/
+
+# Dependências locais
+node_modules/
+__pycache__/
+
+# Arquivos temporários do gerador
+*.html.tmp

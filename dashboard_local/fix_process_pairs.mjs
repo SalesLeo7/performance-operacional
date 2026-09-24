@@ -1,0 +1,12 @@
+import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+const root = "C:/performance_geral_cjm/00 - HTML's update";
+const path = `${root}/outputs/01a08633-89b4-7283-8814-f0b65f6970f7/ParametrosOperacionais_Inbound.xlsx`;
+const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(path));
+const sheet = workbook.worksheets.getItem("ProcessosOutbound");
+sheet.getRange("E7:H7").values = [["Allocated", "In Progress", "In Progress", "Picked"]];
+sheet.getRange("E8:H8").values = [["In Progress", "Picked", "Packed", "Ready to Load"]];
+workbook.recalculate();
+const check = await workbook.inspect({ kind: "table", range: "ProcessosOutbound!A6:L8", include: "values,formulas", tableMaxRows: 3, tableMaxCols: 12 });
+console.log(check.ndjson);
+const output = await SpreadsheetFile.exportXlsx(workbook);
+await output.save(`${path}.fixed`);

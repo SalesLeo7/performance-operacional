@@ -1,0 +1,16 @@
+import { FileBlob, SpreadsheetFile } from "@oai/artifact-tool";
+const root = "C:/performance_geral_cjm/00 - HTML's update";
+const path = `${root}/outputs/01a08633-89b4-7283-8814-f0b65f6970f7/ParametrosOperacionais_Inbound.xlsx`;
+const workbook = await SpreadsheetFile.importXlsx(await FileBlob.load(path));
+const sheet = workbook.worksheets.getItem("RegrasGross");
+sheet.getRange("F31:H31").values = [[14 / 24, "Dia útil + hora", 1]];
+sheet.getRange("I31").values = [[20 / 24]];
+sheet.getRange("O31").values = [["Todos os pedidos tratados como Stock: alocado até 14h, concluir em D+1 até 20h"]];
+sheet.getRange("E32:H32").values = [[14 / 24, null, "Dia útil + hora", 2]];
+sheet.getRange("I32").values = [[16 / 24]];
+sheet.getRange("O32").values = [["Todos os pedidos tratados como Stock: alocado após 14h, concluir em D+2 até 16h"]];
+workbook.recalculate();
+const check = await workbook.inspect({ kind: "table", range: "RegrasGross!A30:Q33", include: "values,formulas", tableMaxRows: 4, tableMaxCols: 17 });
+console.log(check.ndjson);
+const output = await SpreadsheetFile.exportXlsx(workbook);
+await output.save(`${path}.fixed`);

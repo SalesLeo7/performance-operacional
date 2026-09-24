@@ -1,0 +1,69 @@
+{
+  "input": "C:\\Users\\leonardo.sales\\.codex\\plugins\\cache\\openai-curated-remote\\openai-templates\\0.1.1\\skills\\artifact-template-minimal-letterhead\\assets\\reference.docx",
+  "fonts_by_char_count": {
+    "Arial": 1386
+  },
+  "direct_run_formatting_runs": 19,
+  "direct_paragraph_formatting_paragraphs": 21,
+  "heading_like_paragraphs_not_heading_style": [],
+  "examples": {
+    "direct_paragraph_formatting": [
+      {
+        "para_index": 1,
+        "text": "",
+        "style": "normal"
+      },
+      {
+        "para_index": 2,
+        "text": "",
+        "style": "normal"
+      },
+      {
+        "para_index": 3,
+        "text": "[Month Day, Year]",
+        "style": "normal"
+      },
+      {
+        "para_index": 4,
+        "text": "From:",
+        "style": "normal"
+      },
+      {
+        "para_index": 5,
+        "text": "[Sender Name]",
+        "style": "normal"
+      }
+    ],
+    "direct_run_formatting": [
+      {
+        "para_index": 3,
+        "run_text": "[Month Day, Year]",
+        "style": "normal"
+      },
+      {
+        "para_index": 4,
+        "run_text": "From:",
+        "style": "normal"
+      },
+      {
+        "para_index": 5,
+        "run_text": "[Sender Name]",
+        "style": "normal"
+      },
+      {
+        "para_index": 6,
+        "run_text": "[Sender Title]",
+        "style": "normal"
+      },
+      {
+        "para_index": 7,
+        "run_text": "[",
+        "style": "normal"
+      }
+    ]
+  },
+  "notes": [
+    "Direct formatting is not always wrong, but it often causes inconsistent output when templates change.",
+    "Heading-like paragraphs not using Heading styles can break TOC and accessibility."
+  ]
+}

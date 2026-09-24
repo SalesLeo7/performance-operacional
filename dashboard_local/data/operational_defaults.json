@@ -1,0 +1,166 @@
+{
+  "clients": [
+    {
+      "key": "ALGAR",
+      "name": "ALGAR",
+      "suggestedCapacity": 90,
+      "observedDays": 61,
+      "averageDailyLines": 44.0
+    },
+    {
+      "key": "ASUS",
+      "name": "ASUS",
+      "suggestedCapacity": 105,
+      "observedDays": 87,
+      "averageDailyLines": 35.8
+    },
+    {
+      "key": "BAT",
+      "name": "BAT",
+      "suggestedCapacity": 114,
+      "observedDays": 91,
+      "averageDailyLines": 53.4
+    },
+    {
+      "key": "BMW",
+      "name": "BMW",
+      "suggestedCapacity": 2504,
+      "observedDays": 174,
+      "averageDailyLines": 1498.4
+    },
+    {
+      "key": "BT",
+      "name": "BT",
+      "suggestedCapacity": 4,
+      "observedDays": 3,
+      "averageDailyLines": 3.0
+    },
+    {
+      "key": "CLARO",
+      "name": "CLARO",
+      "suggestedCapacity": 3,
+      "observedDays": 10,
+      "averageDailyLines": 1.7
+    },
+    {
+      "key": "CORBION",
+      "name": "CORBION",
+      "suggestedCapacity": 3,
+      "observedDays": 18,
+      "averageDailyLines": 1.7
+    },
+    {
+      "key": "DUCATI",
+      "name": "DUCATI",
+      "suggestedCapacity": 40,
+      "observedDays": 36,
+      "averageDailyLines": 12.2
+    },
+    {
+      "key": "EDELWHITE",
+      "name": "EDELWHITE",
+      "suggestedCapacity": 33,
+      "observedDays": 14,
+      "averageDailyLines": 12.9
+    },
+    {
+      "key": "FIVEHANDS",
+      "name": "FIVEHANDS",
+      "suggestedCapacity": 47,
+      "observedDays": 10,
+      "averageDailyLines": 21.8
+    },
+    {
+      "key": "GAC",
+      "name": "GAC",
+      "suggestedCapacity": 31,
+      "observedDays": 47,
+      "averageDailyLines": 11.8
+    },
+    {
+      "key": "GNUTRA",
+      "name": "GNUTRA",
+      "suggestedCapacity": null,
+      "observedDays": 0,
+      "averageDailyLines": null
+    },
+    {
+      "key": "GWM",
+      "name": "GWM",
+      "suggestedCapacity": 468,
+      "observedDays": 117,
+      "averageDailyLines": 92.1
+    },
+    {
+      "key": "HANSEN",
+      "name": "HANSEN",
+      "suggestedCapacity": 40,
+      "observedDays": 16,
+      "averageDailyLines": 8.9
+    },
+    {
+      "key": "HARLEY",
+      "name": "HARLEY",
+      "suggestedCapacity": 251,
+      "observedDays": 98,
+      "averageDailyLines": 77.0
+    },
+    {
+      "key": "JETOUR",
+      "name": "JETOUR",
+      "suggestedCapacity": 402,
+      "observedDays": 82,
+      "averageDailyLines": 102.5
+    },
+    {
+      "key": "MWC",
+      "name": "MWC",
+      "suggestedCapacity": 15,
+      "observedDays": 21,
+      "averageDailyLines": 6.9
+    },
+    {
+      "key": "OLESEN",
+      "name": "OLESEN",
+      "suggestedCapacity": 8,
+      "observedDays": 38,
+      "averageDailyLines": 3.2
+    },
+    {
+      "key": "OMODA",
+      "name": "OMODA",
+      "suggestedCapacity": 491,
+      "observedDays": 88,
+      "averageDailyLines": 180.6
+    },
+    {
+      "key": "ROQUETTE",
+      "name": "ROQUETTE",
+      "suggestedCapacity": 12,
+      "observedDays": 5,
+      "averageDailyLines": 8.8
+    },
+    {
+      "key": "SAIC",
+      "name": "SAIC",
+      "suggestedCapacity": 148,
+      "observedDays": 15,
+      "averageDailyLines": 42.1
+    },
+    {
+      "key": "SCANDERRA",
+      "name": "SCANDERRA",
+      "suggestedCapacity": 14,
+      "observedDays": 16,
+      "averageDailyLines": 5.2
+    },
+    {
+      "key": "XSYS",
+      "name": "XSYS",
+      "suggestedCapacity": 13,
+      "observedDays": 60,
+      "averageDailyLines": 4.8
+    }
+  ],
+  "generatedAt": "2026-09-09T17:18:19"
+}

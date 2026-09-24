@@ -1,0 +1,34 @@
+{
+  "name": "DSV Customer Performance — Prototype Theme",
+  "dataColors": ["#002664", "#8CC8E8", "#C8CED8", "#26863B", "#ED8B00", "#D71920", "#667085", "#DCE6F1"],
+  "background": "#F3F5F8",
+  "foreground": "#162033",
+  "tableAccent": "#002664",
+  "good": "#26863B",
+  "neutral": "#ED8B00",
+  "bad": "#D71920",
+  "minimum": "#D71920",
+  "center": "#ED8B00",
+  "maximum": "#26863B",
+  "textClasses": {
+    "title": {"fontFace": "Segoe UI Semibold", "fontSize": 18, "color": "#162033"},
+    "header": {"fontFace": "Segoe UI Semibold", "fontSize": 14, "color": "#162033"},
+    "label": {"fontFace": "Segoe UI", "fontSize": 11, "color": "#475467"},
+    "callout": {"fontFace": "Segoe UI Semibold", "fontSize": 24, "color": "#101828"}
+  },
+  "visualStyles": {
+    "*": {
+      "*": {
+        "background": [{"show": true, "color": {"solid": {"color": "#FFFFFF"}}, "transparency": 0}],
+        "border": [{"show": true, "color": {"solid": {"color": "#E4E7EC"}}, "radius": 6}],
+        "title": [{"show": true, "fontFamily": "Segoe UI Semibold", "fontSize": 14, "fontColor": {"solid": {"color": "#162033"}}, "alignment": "left"}]
+      }
+    },
+    "page": {
+      "*": {
+        "background": [{"color": {"solid": {"color": "#F3F5F8"}}, "transparency": 0}],
+        "outspace": [{"color": {"solid": {"color": "#DFE4EA"}}, "transparency": 0}]
+      }
+    }
+  }
+}

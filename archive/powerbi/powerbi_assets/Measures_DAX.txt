@@ -1,0 +1,82 @@
+// Create table: Measures = { BLANK() }
+// Hide Measures[Value]. Use the display folders shown in comments.
+
+// === Selection ===
+Selected Client := SELECTEDVALUE(DimClient[ClientName], "Selecione um cliente")
+Last Refresh := "Atualizado em " & FORMAT(MAX(FactOrder[CreationDate]), "dd mmm yyyy")
+
+// === Expedição ===
+Outbound Valid Lines :=
+CALCULATE(SUM(FactOrder[LineCount]), FactOrder[IsSLAEligible] = TRUE())
+
+Outbound On Time Lines :=
+CALCULATE(SUM(FactOrder[LineCount]), FactOrder[IsSLAEligible] = TRUE(), FactOrder[Performance] = "On Time")
+
+Outbound Delayed Lines :=
+CALCULATE(SUM(FactOrder[LineCount]), FactOrder[IsSLAEligible] = TRUE(), FactOrder[Performance] = "Delay")
+
+Outbound SLA % := DIVIDE([Outbound On Time Lines], [Outbound Valid Lines])
+
+Outbound Eligible Records :=
+CALCULATE(COUNTROWS(FactOrder), FactOrder[IsSLAEligible] = TRUE())
+
+Outbound Data Coverage % := DIVIDE([Outbound Eligible Records], COUNTROWS(FactOrder))
+
+Outbound Previous Month SLA % :=
+CALCULATE([Outbound SLA %], DATEADD(DimDate[Date], -1, MONTH))
+
+Outbound MoM pp := [Outbound SLA %] - [Outbound Previous Month SLA %]
+
+// === Recebimento ===
+Inbound Valid Lines :=
+CALCULATE(SUM(FactAdvice[LineCount]), FactAdvice[IsSLAEligible] = TRUE())
+
+Inbound On Time Lines :=
+CALCULATE(SUM(FactAdvice[LineCount]), FactAdvice[IsSLAEligible] = TRUE(), FactAdvice[Performance] = "On Time")
+
+Inbound Delayed Lines :=
+CALCULATE(SUM(FactAdvice[LineCount]), FactAdvice[IsSLAEligible] = TRUE(), FactAdvice[Performance] = "Delay")
+
+Inbound SLA % := DIVIDE([Inbound On Time Lines], [Inbound Valid Lines])
+
+Inbound Eligible Records :=
+CALCULATE(COUNTROWS(FactAdvice), FactAdvice[IsSLAEligible] = TRUE())
+
+Inbound Data Coverage % := DIVIDE([Inbound Eligible Records], COUNTROWS(FactAdvice))
+
+Inbound Previous Month SLA % :=
+CALCULATE([Inbound SLA %], DATEADD(DimDate[Date], -1, MONTH))
+
+Inbound MoM pp := [Inbound SLA %] - [Inbound Previous Month SLA %]
+
+// === Meta e semáforo ===
+SLA Target % := COALESCE(MAX(MetasSLA[TargetPct]), 0.95)
+SLA Warning % := COALESCE(MAX(MetasSLA[WarningPct]), 0.90)
+
+Outbound Status :=
+SWITCH(TRUE(), ISBLANK([Outbound SLA %]), "Sem dados", [Outbound SLA %] >= [SLA Target %], "Dentro da meta", [Outbound SLA %] >= [SLA Warning %], "Atenção", "Crítico")
+
+Inbound Status :=
+SWITCH(TRUE(), ISBLANK([Inbound SLA %]), "Sem dados", [Inbound SLA %] >= [SLA Target %], "Dentro da meta", [Inbound SLA %] >= [SLA Warning %], "Atenção", "Crítico")
+
+Outbound Status Color :=
+SWITCH([Outbound Status], "Dentro da meta", "#26863B", "Atenção", "#ED8B00", "Crítico", "#D71920", "#667085")
+
+Inbound Status Color :=
+SWITCH([Inbound Status], "Dentro da meta", "#26863B", "Atenção", "#ED8B00", "Crítico", "#D71920", "#667085")
+
+// === Qualidade ===
+Outbound Unclassified Records := CALCULATE(COUNTROWS(FactOrder), FactOrder[Performance] = "Unclassified")
+Inbound Missing Lines Records := CALCULATE(COUNTROWS(FactAdvice), ISBLANK(FactAdvice[LineCount]))
+
+// === Storytelling ===
+Executive Story :=
+VAR InboundSLA = [Inbound SLA %]
+VAR OutboundSLA = [Outbound SLA %]
+VAR InboundDelta = [Inbound MoM pp]
+VAR OutboundDelta = [Outbound MoM pp]
+RETURN
+"Recebimento " & IF(InboundDelta < 0, "recuou ", "avançou ") & FORMAT(ABS(InboundDelta), "0.0 p.p.") &
+" e encerrou em " & FORMAT(InboundSLA, "0.0%") & ". Expedição " &
+IF(OutboundDelta < 0, "recuou ", "avançou ") & FORMAT(ABS(OutboundDelta), "0.0 p.p.") &
+" e encerrou em " & FORMAT(OutboundSLA, "0.0%") & "."

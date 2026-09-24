@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="icon" type="image/png" href="assets/favicon.png?v=2">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="description" content="Dashboard local de performance operacional por cliente">
+  <title>Performance Operacional</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 64 64%22><rect width=%2264%22 height=%2264%22 rx=%2212%22 fill=%22%23002664%22/><path d=%22M13 36h38v8H13z%22 fill=%22%23d71920%22 transform=%22skewX(-18)%22/></svg>">
+  <link rel="stylesheet" href="styles.css?v=13">
+</head>
+<body>
+  <div id="loading" class="loading"><div class="spinner"></div><strong>Preparando o dashboard</strong><span>Carregando os dados locais</span></div>
+  <div id="app" class="app" hidden>
+    <header class="topbar">
+      <button class="mobile-menu" id="mobileMenu" aria-label="Abrir filtros" aria-expanded="false" aria-controls="sidebar">☰</button>
+      <div class="brand" aria-label="DSV — Performance operacional"><img class="brand-logo" src="assets/dsv-logo.png" alt="DSV"><div><b>PERFORMANCE</b><small>Operações CJM</small></div></div>
+      <nav id="pageTabs" class="page-tabs" aria-label="Páginas do dashboard"></nav>
+      <div class="data-status"><span class="status-dot"></span><div><b id="dataStatusLabel">Dados atualizados</b><small id="updatedAt"></small></div></div>
+    </header>
+
+    <div class="shell">
+      <aside id="sidebar" class="sidebar" aria-label="Filtros do dashboard">
+        <div class="sidebar-head"><span>CONTEXTO</span><button id="closeSidebar" aria-label="Fechar filtros">×</button></div>
+        <label class="field"><span>Cliente</span><select id="clientFilter"></select></label>
+        <label class="field" id="ownerField"><span>Owner</span><select id="ownerFilter"><option value="ALL">Todos os owners</option></select></label>
+        <label class="field"><span>Granularidade</span><select id="periodMode"><option value="month" selected>Mês</option><option value="week">Semana</option><option value="day">Dia</option><option value="range">Intervalo</option></select></label>
+        <label class="field" id="periodWindowField"><span>Período</span><select id="periodFilter"><option value="1">Último mês fechado</option><option value="3" selected>Últimos 3 meses</option><option value="6">Últimos 6 meses</option><option value="12">Últimos 12 meses</option><option value="0">Todos os meses</option></select></label>
+        <label class="field" id="periodDateField" hidden><span>Data de referência</span><input id="periodDate" type="date"></label>
+        <div id="periodDateFields" class="date-range" hidden><label class="field"><span>De</span><input id="periodStart" type="date"></label><label class="field"><span>Até</span><input id="periodEnd" type="date"></label></div>
+        <div class="context-card"><span>Período exibido</span><b id="periodLabel">—</b><small>O SLA usa apenas registros elegíveis com linhas válidas.</small></div>
+        <div class="legend"><span>SEMÁFORO</span><div><i class="good"></i>Dentro da meta</div><div><i class="warn"></i>Atenção</div><div><i class="danger"></i>Crítico</div><div><i class="neutral"></i>Sem dados</div></div>
+        <button id="refreshData" class="secondary-button" title="Instruções para atualizar as planilhas e regenerar o dashboard">Como atualizar os dados</button>
+      </aside>
+
+      <main id="content" class="content" tabindex="-1"></main>
+    </div>
+  </div>
+  <button id="sidebarBackdrop" class="sidebar-backdrop" aria-label="Fechar filtros" hidden></button>
+  <div id="toast" class="toast" role="status" aria-live="polite"></div>
+  <script src="assets/client-logos.js?v=1"></script>
+  <script src="app.js?v=12" defer></script>
+</body>
+</html>
