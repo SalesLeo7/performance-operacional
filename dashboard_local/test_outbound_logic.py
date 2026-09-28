@@ -133,6 +133,15 @@ class OutboundRulesTest(unittest.TestCase):
         self.assertFalse(ecomm["active"])
         self.assertEqual(ecomm["operation"], "Inbound")
 
+    def test_historical_inbound_uses_unique_active_owner_capacity(self):
+        self.config.inbound_capacities[("DUCATI", "PRINCIPAL")] = [{
+            "value": 39,
+            "from": date(2026, 6, 18),
+            "to": date.max,
+            "active": True,
+        }]
+        self.assertEqual(self.config.inbound_capacity("DUCATI", date(2026, 6, 17), "HISTORICO"), 39)
+
 
 if __name__ == "__main__":
     unittest.main()

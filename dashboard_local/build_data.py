@@ -355,6 +355,26 @@ class OperationalConfiguration:
 
     def inbound_capacity(self, client: str, day: date, owner: str = "DEFAULT") -> int | None:
         entry = next((candidate for pair in self._priority(client, owner) if (candidate := self._effective(self.inbound_capacities.get(pair, []), day))), None)
+        # Legacy inbound rows do not carry an operational Owner and are stored
+        # as HISTORICO. If the client has exactly one active official capacity
+        # for another Owner, that capacity is unambiguous and can be applied to
+        # the historical row, including history before the profile start date.
+        # Multiple active Owner capacities remain intentionally unresolved to
+        # avoid assigning history to the wrong SLA.
+        if entry is None and owner == "HISTORICO":
+            candidates = []
+            for (candidate_client, candidate_owner), entries in self.inbound_capacities.items():
+                if candidate_client != client or candidate_owner in {"DEFAULT", "HISTORICO"}:
+                    continue
+                candidate = self._effective(entries, day)
+                if candidate and candidate["active"] and candidate["value"] is not None:
+                    candidates.append(candidate)
+                elif not candidate:
+                    historical = [item for item in entries if item["active"] and item["value"] is not None and item["to"] >= day]
+                    if len(historical) == 1:
+                        candidates.append(historical[0])
+            if len(candidates) == 1:
+                entry = candidates[0]
         return entry["value"] if entry and entry["active"] else None
 
     def journey(self, client: str, day: date, owner: str = "DEFAULT") -> list[tuple[time, time]]:
@@ -470,6 +490,14 @@ class OperationalConfiguration:
         for pair in self._priority(client, owner):
             if pair in self.inbound_capacity_display:
                 return {**self.inbound_capacity_display[pair], "operation": "Inbound", "appliedToOwner": owner, "inherited": pair != (client, owner)}
+        if owner == "HISTORICO":
+            candidates = [
+                pair for pair, profile in self.inbound_capacity_display.items()
+                if pair[0] == client and pair[1] not in {"DEFAULT", "HISTORICO"} and profile.get("active")
+            ]
+            if len(candidates) == 1:
+                pair = candidates[0]
+                return {**self.inbound_capacity_display[pair], "operation": "Inbound", "appliedToOwner": owner, "inherited": True}
         return {"clientKey": client, "ownerKey": owner, "operation": "Inbound", "officialCapacity": None, "suggestedCapacity": None, "active": False, "validFrom": None, "validTo": None, "appliedToOwner": owner, "inherited": True}
 
 
