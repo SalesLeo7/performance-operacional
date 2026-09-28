@@ -47,7 +47,7 @@ Edite `outputs/01a08633-89b4-7283-8814-f0b65f6970f7/ParametrosOperacionais_Inbou
 - A `CapacidadeSugerida` usa o p95 dos dias com linhas liberadas e serve como referência.
 - Revise jornada, feriados e exceções operacionais antes de oficializar os resultados.
 - As metas de etapa começam vazias. Sem meta oficial, o painel mostra média, mediana, p90 e cobertura sem semáforo de desempenho.
-- A aba `ProcessosOutbound` define os pares de cada processo. Processamento usa `Allocated → In Progress` até `In Progress → Picked`; Separação usa `In Progress → Picked` até `Packed → Ready to Load`. Quando há regra Gross ativa, os processos herdam suas faixas de corte separadamente.
+- A aba `ProcessosOutbound` define os pares de cada processo por cliente e, quando necessário, por Owner. `Cliente + Owner` tem prioridade sobre `Cliente + DEFAULT`, que por sua vez usa `DEFAULT + DEFAULT`. Todos os eventos reconhecidos do Outbound podem ser usados nos pares. Vigências não podem se sobrepor para o mesmo cliente, Owner e processo; conflitos interrompem a geração do dashboard. Quando há regra Gross ativa, os processos herdam suas faixas de corte separadamente.
 
 ## Telas
 

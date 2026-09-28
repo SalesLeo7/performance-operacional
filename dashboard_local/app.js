@@ -151,11 +151,12 @@ function stageKey(item) { return `${item.stageFrom} → ${item.stageTo}`; }
 function trustClass(item) { return item.trust === "Confiável" ? "good" : item.trust === "Atenção" ? "warn" : "danger"; }
 function processRule(key) {
   const rules = (dataset.processRules || []).filter(item => item.processKey === key && (item.clientKey === state.client || item.clientKey === "DEFAULT") && (state.owner === "ALL" || item.ownerKey === state.owner || item.ownerKey === "DEFAULT"));
-  return rules.sort((a, b) => (a.clientKey === state.client ? 0 : 1) - (b.clientKey === state.client ? 0 : 1) || (a.ownerKey === state.owner ? 0 : 1) - (b.ownerKey === state.owner ? 0 : 1) || String(b.from || "").localeCompare(String(a.from || "")))[0] || {
-    processKey: key, processName: key === "PROCESSAMENTO" ? "Processamento" : "Separação",
-    startFrom: key === "PROCESSAMENTO" ? "Allocated" : "In Progress", startTo: key === "PROCESSAMENTO" ? "In Progress" : "Picked",
-    endFrom: key === "PROCESSAMENTO" ? "In Progress" : "Packed", endTo: key === "PROCESSAMENTO" ? "Picked" : "Ready to Load", targetHours: null,
-  };
+  const ordered = rules.sort((a, b) => {
+    const clientPriority = (a.clientKey === state.client ? 0 : 1) - (b.clientKey === state.client ? 0 : 1);
+    const ownerPriority = (a.ownerKey === state.owner ? 0 : a.ownerKey === "DEFAULT" ? 1 : 2) - (b.ownerKey === state.owner ? 0 : b.ownerKey === "DEFAULT" ? 1 : 2);
+    return clientPriority || ownerPriority || String(b.from || "").localeCompare(String(a.from || ""));
+  });
+  return ordered[0] || { processKey: key, processName: key === "PROCESSAMENTO" ? "Processamento" : "Separação", configured: false, targetHours: null };
 }
 function aggregateProcessRows(items) {
   if (!items.length) return null;
@@ -177,6 +178,7 @@ function combinedProcessRows() {
 }
 function processStatus(value) { const result = status(value, "Outbound"); return { key: result.key, label: result.label }; }
 function processPerformanceCard(key, title, icon, rule, metric) {
+  const configured = rule?.configured !== false;
   const value = metric?.performanceValue ?? null;
   const slaHours = metric?.targetHours ?? rule.targetHours ?? null;
   const usesGrossDeadline = metric?.deadlineSource === "Gross";
@@ -185,8 +187,8 @@ function processPerformanceCard(key, title, icon, rule, metric) {
   const eligible = metric?.eligibleLines || 0;
   const total = metric?.totalLines || 0;
   const coverageValue = total ? eligible / total : null;
-  const stateLabel = value == null ? (slaHours == null ? "Aguardando SLA" : "Sem dados") : stateValue.label;
-  const subtitle = key === "combined" ? (eligible ? `${fmt.format(eligible)} linhas elegíveis · interseção das etapas` : "Sem linhas elegíveis nas duas etapas") : usesGrossDeadline ? (eligible ? `${fmt.format(eligible)} linhas elegíveis · corte Gross aplicado separadamente` : "Sem linhas elegíveis no período") : slaHours == null ? "Preencha MetaHorasUteis em ProcessosOutbound" : eligible ? `${fmt.format(eligible)} linhas elegíveis · cobertura ${pct(coverageValue)}` : "Sem linhas elegíveis no período";
+  const stateLabel = !configured ? "Não configurado" : value == null ? (slaHours == null ? "Aguardando SLA" : "Sem dados") : stateValue.label;
+  const subtitle = !configured ? "Cadastre este processo em ProcessosOutbound" : key === "combined" ? (eligible ? `${fmt.format(eligible)} linhas elegíveis · interseção das etapas` : "Sem linhas elegíveis nas duas etapas") : usesGrossDeadline ? (eligible ? `${fmt.format(eligible)} linhas elegíveis · corte Gross aplicado separadamente` : "Sem linhas elegíveis no período") : slaHours == null ? "Preencha MetaHorasUteis em ProcessosOutbound" : eligible ? `${fmt.format(eligible)} linhas elegíveis · cobertura ${pct(coverageValue)}` : "Sem linhas elegíveis no período";
   const width = value == null ? 0 : Math.max(0, Math.min(100, value * 100));
   const processExplanation = key === "combined" ? "Considera no prazo somente as linhas que cumpriram Processamento e Separação." : key === "processing" ? "Mede o tempo entre o início e o fim do Processamento dentro da regra configurada." : "Mede o tempo entre o início e o fim da Separação dentro da regra configurada.";
   return `<button type="button" class="process-performance-card ${stateValue.key} ${selected ? "selected" : ""}" data-process-stage="${key}" aria-pressed="${selected}" title="${htmlEscape(processExplanation)}">
@@ -194,7 +196,7 @@ function processPerformanceCard(key, title, icon, rule, metric) {
     <div class="process-card-score"><strong>${pct(value)}</strong><span>meta ${pct(target("Outbound").target)}</span></div>
     <div class="process-card-track"><i style="width:${width}%"></i><b style="left:${target("Outbound").target * 100}%" title="Meta ${pct(target("Outbound").target)}"></b></div>
     <div class="process-card-stats"><div><small>${usesGrossDeadline ? "Regra de prazo" : "SLA do processo"}</small><b>${usesGrossDeadline ? "Corte Gross" : slaHours == null ? "—" : hours(slaHours) + " úteis"}</b></div><div><small>No prazo</small><b>${metric ? fmt.format(metric.onTimeLines || 0) : "—"}</b></div><div><small>Em atraso</small><b>${metric ? fmt.format(metric.delayedLines || 0) : "—"}</b></div></div>
-    <div class="process-card-foot"><span class="stage-chip"><span>${rule.startFrom} → ${rule.startTo}</span><b>até</b><span>${rule.endFrom} → ${rule.endTo}</span></span><span class="process-card-sub">${subtitle}</span></div>
+    <div class="process-card-foot"><span class="stage-chip">${configured ? `<span>${rule.startFrom} → ${rule.startTo}</span><b>até</b><span>${rule.endFrom} → ${rule.endTo}</span>` : "Processo sem regra ativa"}</span><span class="process-card-sub">${subtitle}</span></div>
   </button>`;
 }
 function outboundProcessPerformance() {

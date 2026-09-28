@@ -133,6 +133,35 @@ class OutboundRulesTest(unittest.TestCase):
         self.assertFalse(ecomm["active"])
         self.assertEqual(ecomm["operation"], "Inbound")
 
+    def test_process_rules_reject_overlapping_validity(self):
+        config = deepcopy(self.config)
+        config.process_rules[("GWM", "DEFAULT", "PROCESSAMENTO")] = [
+            {"processKey": "PROCESSAMENTO", "processName": "Processamento", "startFrom": "Allocated", "startTo": "In Progress", "endFrom": "In Progress", "endTo": "Picked", "targetHours": 8, "from": date(2026, 1, 1), "to": date(2026, 6, 30), "ownerKey": "DEFAULT"},
+            {"processKey": "PROCESSAMENTO", "processName": "Processamento", "startFrom": "Allocated", "startTo": "In Progress", "endFrom": "In Progress", "endTo": "Picked", "targetHours": 8, "from": date(2026, 6, 30), "to": date.max, "ownerKey": "DEFAULT"},
+        ]
+        with self.assertRaisesRegex(ValueError, "sobreposto"):
+            config._validate_process_rules()
+
+    def test_process_rules_accept_all_outbound_events(self):
+        config = deepcopy(self.config)
+        config.process_rules[("GWM", "DEFAULT", "PROCESSAMENTO")] = [{
+            "processKey": "PROCESSAMENTO", "processName": "Processamento",
+            "startFrom": "Creation", "startTo": "Released", "endFrom": "Complete", "endTo": "Shipped",
+            "targetHours": 8, "from": date(2026, 1, 1), "to": date.max, "ownerKey": "DEFAULT",
+        }]
+        config._validate_process_rules()
+
+    def test_process_rules_prioritize_client_owner_then_client_default(self):
+        config = deepcopy(self.config)
+        config.process_rules[("ASUS", "DEFAULT", "PROCESSAMENTO")] = [{
+            "processKey": "PROCESSAMENTO", "processName": "Processamento", "startFrom": "Allocated", "startTo": "In Progress", "endFrom": "In Progress", "endTo": "Picked", "targetHours": 12, "from": date(2026, 1, 1), "to": date.max, "ownerKey": "DEFAULT",
+        }]
+        config.process_rules[("ASUS", "ECOMM", "PROCESSAMENTO")] = [{
+            "processKey": "PROCESSAMENTO", "processName": "Processamento", "startFrom": "Released", "startTo": "Allocated", "endFrom": "Allocated", "endTo": "Picked", "targetHours": 8, "from": date(2026, 1, 1), "to": date.max, "ownerKey": "ECOMM",
+        }]
+        self.assertEqual(config.process_rules_for("ASUS", date(2026, 7, 1), "ECOMM")[0]["targetHours"], 8)
+        self.assertEqual(config.process_rules_for("ASUS", date(2026, 7, 1), "RETAIL")[0]["targetHours"], 12)
+
     def test_historical_inbound_uses_unique_active_owner_capacity(self):
         self.config.inbound_capacities[("DUCATI", "PRINCIPAL")] = [{
             "value": 39,

@@ -36,6 +36,7 @@ STAGES = [
     ("Shipped", "SHIPPED", "SHIPPED2"),
 ]
 STAGE_ORDER = {name: index for index, (name, _, _) in enumerate(STAGES)}
+PROCESS_EVENT_NAMES = frozenset(STAGE_ORDER)
 TRANSITIONS = [(STAGES[i][0], STAGES[i + 1][0]) for i in range(len(STAGES) - 1)] + [("Creation", "Shipped")]
 SOURCE_AS_OF = datetime.fromtimestamp(SOURCE.stat().st_mtime) if SOURCE.exists() else datetime.now()
 CSV_STAGE_COLUMNS = {
@@ -265,7 +266,9 @@ class OperationalConfiguration:
                     "from": as_date(row.get("VigenciaInicio")) or date.min,
                     "to": as_date(row.get("VigenciaFim")) or date.max,
                     "ownerKey": owner,
+                    "configured": True,
                 })
+        self._validate_process_rules()
         for row in table_rows(book, "RegrasGross"):
             key = clean(row.get("ClientKey")).upper() or "DEFAULT"
             owner = clean(row.get("OwnerKey")).upper() or "DEFAULT"
@@ -343,6 +346,33 @@ class OperationalConfiguration:
     def _effective(entries: list[dict[str, Any]], day: date) -> dict[str, Any] | None:
         valid = [entry for entry in entries if entry["from"] <= day <= entry["to"]]
         return max(valid, key=lambda item: item["from"]) if valid else None
+
+    def _validate_process_rules(self) -> None:
+        """Reject ambiguous process configurations before any data is generated."""
+        for (client, owner, process_key), entries in self.process_rules.items():
+            for entry in entries:
+                event_names = {
+                    entry["startFrom"], entry["startTo"], entry["endFrom"], entry["endTo"],
+                }
+                invalid = sorted(event_names - PROCESS_EVENT_NAMES)
+                if invalid:
+                    raise ValueError(
+                        f"ProcessosOutbound inválido para {client}/{owner}/{process_key}: "
+                        f"status não reconhecido: {', '.join(invalid)}"
+                    )
+                if STAGE_ORDER[entry["startFrom"]] >= STAGE_ORDER[entry["startTo"]] or STAGE_ORDER[entry["endFrom"]] >= STAGE_ORDER[entry["endTo"]]:
+                    raise ValueError(
+                        f"ProcessosOutbound inválido para {client}/{owner}/{process_key}: "
+                        "cada par deve estar em ordem cronológica"
+                    )
+            ordered = sorted(entries, key=lambda item: (item["from"], item["to"]))
+            for previous, current in zip(ordered, ordered[1:]):
+                if current["from"] <= previous["to"]:
+                    raise ValueError(
+                        f"ProcessosOutbound sobreposto para {client}/{owner}/{process_key}: "
+                        f"{previous['from'].isoformat()}–{previous['to'].isoformat()} e "
+                        f"{current['from'].isoformat()}–{current['to'].isoformat()}"
+                    )
 
     @staticmethod
     def _priority(client: str, owner: str) -> list[tuple[str, str]]:
