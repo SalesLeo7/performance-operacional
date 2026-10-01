@@ -873,6 +873,17 @@ def split_capacity(lines: int, remaining: int) -> tuple[int, int, int]:
     return included, excluded, remaining - included
 
 
+def allocate_outbound_net_capacity(lines: int, performance: str, remaining: int) -> tuple[int, int, int]:
+    """Keeps on-time lines in NET and removes only delayed overflow lines."""
+    lines = max(0, int(lines or 0))
+    remaining = max(0, int(remaining or 0))
+    next_remaining = max(0, remaining - lines)
+    if performance != "Delay":
+        return lines, 0, next_remaining
+    included = min(lines, remaining)
+    return included, lines - included, next_remaining
+
+
 def allocate_inbound_net_capacity(records: list[dict[str, Any]], official: int | None) -> list[tuple[int, int]]:
     """Retira do NET apenas o atraso que excede a capacidade diária."""
     if official is None:
@@ -1574,7 +1585,7 @@ def main() -> None:
             if allocations is not None:
                 included, excluded = allocations[index]
             else:
-                included, excluded, remaining = split_capacity(record["lines"], remaining)
+                included, excluded, remaining = allocate_outbound_net_capacity(record["lines"], record["performance"], remaining)
             included_total += included
             excluded_total += excluded
             if record["performance"] in {"On Time", "Delay"}:

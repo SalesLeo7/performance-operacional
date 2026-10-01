@@ -77,9 +77,9 @@ guide.getRange("A12:B12").values = [["Conceito", "Regra aplicada"]];
 header(guide.getRange("A12:B12"));
 guide.getRange("A13:B21").values = [
   ["Gross", "Usa todas as linhas válidas classificadas como On Time ou Delay."],
-  ["NET", "Usa somente as linhas que cabem na capacidade oficial ativa do cliente no dia operacional da liberação."],
-  ["Excesso de capacidade", "Permanece no Gross e sai do numerador e do denominador do NET. Motivo: Excluído do NET por capacidade."],
-  ["Rateio", "A capacidade é consumida por linha. Um pedido pode ficar integralmente, parcialmente ou totalmente fora do NET."],
+  ["NET", "Usa as linhas elegíveis dentro da capacidade oficial e mantém as linhas no prazo; somente o excesso atrasado sai do NET."],
+  ["Excesso de capacidade", "Linhas atrasadas que ultrapassam a capacidade permanecem no Gross e saem do numerador e do denominador do NET."],
+  ["Rateio", "A capacidade é consumida por linha em ordem FIFO. Linhas no prazo continuam no NET; linhas atrasadas acima do limite ficam fora do NET."],
   ["FIFO", "RELEASED_DATETIME, depois CREATION_DATETIME e Chaveamento."],
   ["Dia operacional", "Liberações após 17h ou em dia não útil passam ao próximo dia útil às 08h. Antes das 08h passam para 08h."],
   ["Horas úteis", "Segunda a sexta, 08:00–12:00 e 13:00–17:00, descontando feriados e exceções cadastradas."],

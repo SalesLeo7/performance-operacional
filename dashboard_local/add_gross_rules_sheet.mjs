@@ -49,7 +49,7 @@ guide.getRange("A13:B21").values = [
   ["Gross de concluídos", "Inclui somente processos que possuem o evento final configurado."],
   ["Em andamento", "Processos abertos antes do vencimento ficam fora do Gross realizado e aparecem na visão operacional."],
   ["Gross da base", "Mantém a coluna Performance original para comparação com o resultado recalculado."],
-  ["NET", "Aplica a capacidade oficial ao Gross recalculado. O excesso de linhas permanece no Gross e sai do NET."],
+  ["NET", "Aplica a capacidade oficial ao Gross recalculado. Somente o excesso de linhas atrasadas sai do NET; linhas no prazo continuam elegíveis."],
   ["Limite de corte", "O fim da faixa é inclusivo. Exemplo: exatamente 14:00 pertence à faixa até 14:00."],
   ["Horas e dias úteis", "Considera Jornada, Feriados e exceções. O prazo pode usar dia útil mais hora ou quantidade de horas úteis."],
   ["Sem informação", "Registros sem regra, início ou dados necessários ficam como Não calculado e aparecem na cobertura."],
